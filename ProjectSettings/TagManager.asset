@@ -2,8 +2,16 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
-  tags: []
+  serializedVersion: 3
+  tags:
+  - Slot02
+  - Slot01
+  - Slot04
+  - Slot05
+  - Slot03
+  - DropReward
+  - PinPoint
+  - clawInside
   layers:
   - Default
   - TransparentFX
@@ -41,3 +49,11 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: BG
+    uniqueID: 886179553
+    locked: 0
+  - name: Player
+    uniqueID: 244731427
+    locked: 0
+  m_RenderingLayers:
+  - Default

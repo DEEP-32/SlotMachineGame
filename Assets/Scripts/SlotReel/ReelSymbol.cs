@@ -1,9 +1,17 @@
 ﻿using SlotMachine.Data;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SlotMachine.SlotReel {
+    
+    [RequireComponent(typeof(SpriteRenderer))]
+    
     public class ReelSymbol : MonoBehaviour {
-        [SerializeField] private SpriteRenderer _spriteRenderer;
+        SpriteRenderer spriteRenderer;
+        
+        private void Awake() {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
     
         // Public property to read what this symbol currently is
         public SymbolType CurrentType { get; private set; }
@@ -17,9 +25,9 @@ namespace SlotMachine.SlotReel {
         
             CurrentType = data.symbolType;
         
-            if (_spriteRenderer != null)
+            if (spriteRenderer != null)
             {
-                _spriteRenderer.sprite = data.symbolSprite;
+                spriteRenderer.sprite = data.symbolSprite;
             }
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using SlotMachine.Data;
 using SlotMachine.Extension;
+using SlotMachine.SlotReel;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -19,8 +20,13 @@ namespace SlotMachine {
     
     public class GameManager : PersistentSingleton<GameManager> {
         [SerializeField] SymbolDatabase database;
+        [SerializeField] SaveHandler saveHandler;
+        
+        [Space]
+        [Header("Scene references")]
+        [SerializeField] ReelManager reelManager;
+        
         SlotMathEngine mathEngine;
-        SaveHandler saveHandler;
 
         protected override void Awake() {
             database.Initialize();
@@ -28,6 +34,8 @@ namespace SlotMachine {
             
             //load save data or just set to default depending on ignoreSaveData
             saveHandler.Initialize();
+            
+            reelManager.InitializeReels(database);
         }
 
         public void Spin() {
