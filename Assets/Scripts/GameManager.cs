@@ -10,22 +10,19 @@ using UnityEditor;
 #endif
 
 namespace SlotMachine {
-
-    enum GameStates {
-        Start,
-        Betting,
-        Spinning,
-        Winning,
-        Losing
-    }
     
     public class GameManager : PersistentSingleton<GameManager> {
+
+        public static Action<int> OnCoinChange;
+        
         [SerializeField] SymbolDatabase database;
-        [SerializeField] SaveHandler saveHandler;
+        
+        [field:SerializeField] public int Coins { get; private set; } = 1000;
         
         [Space]
         [Header("Scene references")]
         [SerializeField] ReelManager reelManager;
+        [SerializeField] GameCanvas gameCanvas;
 
         [SerializeField] float timeForResult = 2f;
         
@@ -35,10 +32,12 @@ namespace SlotMachine {
             database.Initialize();
             mathEngine = new SlotMathEngine(database);
             
-            //load save data or just set to default depending on ignoreSaveData
-            saveHandler.Initialize();
-            
             reelManager.InitializeReels(database);
+        }
+
+        void Start() {
+            gameCanvas.ToggleHandle(false);
+            gameCanvas.OnSpinComplete();
         }
 
         async public void  Spin() {
@@ -47,18 +46,30 @@ namespace SlotMachine {
             await Awaitable.WaitForSecondsAsync(timeForResult);
             reelManager.StopReels(result, OnSpinComplete);
             Debug.Log($"Spin Result: {result}");
+
+            Coins += result.TotalPayout;
+            
+            OnCoinChange?.Invoke(Coins);
         }
 
         void OnSpinComplete() {
-            
+            gameCanvas.OnSpinComplete();
+        }
+
+        public bool TryStartBetting(int amount) {
+            if (amount <= Coins) {
+                Coins -= amount;
+                OnCoinChange?.Invoke(Coins);
+                Spin();
+                return true;
+            }
+
+            return false;
         }
 
 
         void OnDestroy() {
-            saveHandler.Save();
-
             mathEngine = null;
-            saveHandler = null;
         }
     }
 
@@ -73,7 +84,9 @@ namespace SlotMachine {
 
             EditorGUILayout.Space(10); // Add a 10-pixel visual gap
 
-            EditorGUILayout.HelpBox("Note: This button is for testing the math engine and outcome generation in the console. It does NOT trigger visual reel animations.", MessageType.Info);
+            EditorGUILayout.HelpBox("Note: This button is for triggering whole spin logic without money and to test the whole flow", MessageType.Info);
+            EditorGUILayout.Space(10);
+            EditorGUILayout.HelpBox("Warning : should be triggered only in game mode", MessageType.Warning);
 
             
             if (GUILayout.Button("Test Spin", GUILayout.Height(40))) {
