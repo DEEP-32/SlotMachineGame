@@ -11,15 +11,27 @@ namespace SlotMachine {
     public class GameManager : PersistentSingleton<GameManager> {
         [SerializeField] SymbolDatabase database;
         SlotMathEngine mathEngine;
+        SaveHandler saveHandler;
 
         protected override void Awake() {
             database.Initialize();
             mathEngine = new SlotMathEngine(database);
+            
+            //load save data or just set to default depending on ignoreSaveData
+            saveHandler.Initialize();
         }
 
         public void Spin() {
             SpinResult result = mathEngine.GenerateSpin(3);
             Debug.Log($"Spin Result: {result}");
+        }
+
+
+        void OnDestroy() {
+            saveHandler.Save();
+
+            mathEngine = null;
+            saveHandler = null;
         }
     }
 
