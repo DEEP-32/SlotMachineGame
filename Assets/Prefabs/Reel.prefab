@@ -9,6 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1986254279923290840}
+  - component: {fileID: 2302487748606813376}
+  - component: {fileID: 6468752148685759003}
   m_Layer: 5
   m_Name: SymbolParent
   m_TagString: Untagged
@@ -33,8 +35,46 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 120, y: 120}
+  m_SizeDelta: {x: 120, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2302487748606813376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2402521011449045349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GridLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 4
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 100}
+  m_Spacing: {x: 0, y: 26.47}
+  m_Constraint: 1
+  m_ConstraintCount: 1
+--- !u!114 &6468752148685759003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2402521011449045349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &8426151788558494762
 GameObject:
   m_ObjectHideFlags: 0
@@ -125,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e8cafd01a3a4929a6f389645c3e2ee3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlotMachine.SlotReel.ReelController
-  spinSpeed: 2500
+  spinSpeed: 1500
   symbolSpacing: 250
   symbolPrefab: {fileID: 6284287965449138156, guid: 9872ae33ac4f2b14e8b194e9e88f224f, type: 3}
   symbolContainer: {fileID: 1986254279923290840}
@@ -143,6 +183,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3769b89aead4af0985fc3f5985f2a1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlotMachine.SlotReel.ReelAnimation
-  _bounceDepth: -40
-  _bounceTime: 0.1
-  _recoveryTime: 0.15
+  bounceDepth: -40
+  bounceTime: 0.1
+  recoveryTime: 0.15

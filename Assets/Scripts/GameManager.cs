@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using SlotMachine.Data;
 using SlotMachine.Extension;
 using SlotMachine.SlotReel;
@@ -25,6 +26,8 @@ namespace SlotMachine {
         [Space]
         [Header("Scene references")]
         [SerializeField] ReelManager reelManager;
+
+        [SerializeField] float timeForResult = 2f;
         
         SlotMathEngine mathEngine;
 
@@ -38,9 +41,16 @@ namespace SlotMachine {
             reelManager.InitializeReels(database);
         }
 
-        public void Spin() {
+        async public void  Spin() {
+            reelManager.SpinAllReels();
             SpinResult result = mathEngine.GenerateSpin(3);
+            await Awaitable.WaitForSecondsAsync(timeForResult);
+            reelManager.StopReels(result, OnSpinComplete);
             Debug.Log($"Spin Result: {result}");
+        }
+
+        void OnSpinComplete() {
+            
         }
 
 

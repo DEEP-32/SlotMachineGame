@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: BarSymbol
   m_EditorClassIdentifier: Assembly-CSharp::SlotMachine.Data.SlotSymbol
   symbolType: 3
-  symbolSprite: {fileID: -4945717182177459964, guid: 2300b2a787dea8641afc80c168ff68a7, type: 3}
+  symbolSprite: {fileID: 21300000, guid: 2300b2a787dea8641afc80c168ff68a7, type: 3}
   weight: 5
   payoutValue: 200
