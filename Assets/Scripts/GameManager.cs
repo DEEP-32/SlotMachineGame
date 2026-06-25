@@ -8,6 +8,15 @@ using UnityEditor;
 #endif
 
 namespace SlotMachine {
+
+    enum GameStates {
+        Start,
+        Betting,
+        Spinning,
+        Winning,
+        Losing
+    }
+    
     public class GameManager : PersistentSingleton<GameManager> {
         [SerializeField] SymbolDatabase database;
         SlotMathEngine mathEngine;
