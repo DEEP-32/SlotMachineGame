@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d493df20669c4a038b77e73d5b5ab5f6, type: 3}
+  m_Name: SevenSymbol
+  m_EditorClassIdentifier: Assembly-CSharp::SlotMachine.Data.SlotSymbol
+  symbolType: 2
+  symbolSprite: {fileID: 2193077994593488821, guid: 39a25089d493f254cb127786e1dfe7c2, type: 3}
+  weight: 10
+  payoutValue: 100

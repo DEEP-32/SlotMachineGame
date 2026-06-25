@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d493df20669c4a038b77e73d5b5ab5f6, type: 3}
+  m_Name: CherrySmbol
+  m_EditorClassIdentifier: Assembly-CSharp::SlotMachine.Data.SlotSymbol
+  symbolType: 0
+  symbolSprite: {fileID: -5620835742497143143, guid: 25aa3b38f3b8bba43bb9b4f8c8335790, type: 3}
+  weight: 50
+  payoutValue: 20
