@@ -1,33 +1,26 @@
 ﻿using SlotMachine.Data;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 namespace SlotMachine.SlotReel {
-    
-    [RequireComponent(typeof(SpriteRenderer))]
-    
+    [RequireComponent(typeof(Image))]
     public class ReelSymbol : MonoBehaviour {
-        SpriteRenderer spriteRenderer;
-        
-        private void Awake() {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-        }
-    
-        // Public property to read what this symbol currently is
+        [SerializeField] Image symbolImage;
+
+
         public SymbolType CurrentType { get; private set; }
 
         /// <summary>
-        /// Injects the ScriptableObject data into the visual prefab.
+        /// Injects the ScriptableObject data into the UI prefab.
         /// </summary>
-        public void SetSymbol(SlotSymbol data)
-        {
+        public void SetSymbol(SlotSymbol data) {
             if (data == null) return;
-        
+
             CurrentType = data.symbolType;
-        
-            if (spriteRenderer != null)
-            {
-                spriteRenderer.sprite = data.symbolSprite;
+
+            if (symbolImage != null) {
+                symbolImage.sprite = data.symbolSprite;
             }
         }
     }

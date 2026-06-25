@@ -2,47 +2,43 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 namespace SlotMachine.SlotReel {
     public class ReelController : MonoBehaviour {
-        enum ReelState {
-            Idle,
-            Spinning,
-            Stopping
-        }
+        enum ReelState { Idle, Spinning, Stopping }
 
-        private ReelState _currentState = ReelState.Idle;
+        ReelState currentState = ReelState.Idle;
+        SymbolDatabase database;
 
-        private SymbolDatabase _database;
-
-        [Header("Reel Settings")]
+        [Header("UI Reel Settings")]
+        [Tooltip("Speed in UI Pixels per second (e.g., 2000 - 3000)")]
         [SerializeField]
-        float spinSpeed = 20f;
+        float spinSpeed = 2500f; 
 
-        [SerializeField] float symbolSpacing = 2.5f;
-
-        [Tooltip("The Y position where a symbol is completely off-screen at the bottom and needs to wrap to the top.")]
-        [SerializeField]
-        float bottomThreshold = -5f;
+        [Tooltip("MUST exactly match the Height + Spacing of your cell in the VerticalLayoutGroup.")]
+        [SerializeField] 
+        float symbolSpacing = 250f; 
 
         [Header("Symbol Pool")]
-        [Tooltip("The prefab for a single symbol on the reel.")]
+        [Tooltip("The UI prefab for a single symbol on the reel.")]
         [SerializeField]
         ReelSymbol symbolPrefab;
 
-        [Tooltip("How many symbols to spawn for this reel's pool (usually 5).")]
+        [Tooltip("The parent UI object that HAS the Vertical Layout Group attached.")]
+        [SerializeField]
+        RectTransform symbolContainer;
+
+        [Tooltip("Must be an ODD number (e.g., 5 or 7). This ensures there is a strict center symbol.")]
         [SerializeField]
         int poolSize = 5;
 
         [Header("Components")]
-        [Tooltip("Reference to the decoupled animation component attached to this GameObject.")]
+        [Tooltip("Reference to the animation component attached to the SymbolContainer.")]
         [SerializeField]
         ReelAnimation reelAnimation;
-        
-        [Header("Symbol parent")]
-        [SerializeField] Transform symbolParent;
 
         // State Tracking
         List<ReelSymbol> symbolPool = new List<ReelSymbol>();
@@ -50,135 +46,124 @@ namespace SlotMachine.SlotReel {
         ReelSymbol targetSymbolInstance;
         Action onReelStopped;
 
-        /// <summary>
-        /// Called by the ReelManager on startup to dynamically build the column.
-        /// </summary>
         public void Initialize(SymbolDatabase database) {
-            _database = database;
+            this.database = database;
 
-            // Clear existing symbols if re-initializing
-            foreach (var sym in symbolPool) {
-                if (sym != null) Destroy(sym.gameObject);
+            // Clear existing symbols from the UI container
+            foreach (Transform child in symbolContainer) {
+                Destroy(child.gameObject);
             }
-
             symbolPool.Clear();
 
-            // We offset the start index by -1 so the first symbol spawns BELOW the center line,
-            // the second spawns IN the center, and the third spawns ABOVE the center.
-            int startIndexOffset = -1;
-
-            // Dynamically spawn the pool of symbols
+            // Dynamically spawn the pool of symbols into the Layout Group
             for (int i = 0; i < poolSize; i++) {
-                ReelSymbol newSymbol = Instantiate(symbolPrefab, symbolParent);
-                
-                // Calculate the Y position with the new offset
-                float yPos = (i + startIndexOffset) * symbolSpacing;
-                newSymbol.transform.localPosition = new Vector3(0, yPos, 0);
-
+                ReelSymbol newSymbol = Instantiate(symbolPrefab, symbolContainer);
                 symbolPool.Add(newSymbol);
                 AssignRandomSymbolOffScreen(newSymbol);
             }
+
+            // Force the grid to calculate positions immediately
+            LayoutRebuilder.ForceRebuildLayoutImmediate(symbolContainer);
         }
 
         private void Update() {
-            if (_currentState == ReelState.Idle) return;
-
-            MoveSymbolsDown();
+            if (currentState == ReelState.Idle) return;
+            MoveContainerDown();
         }
 
         // --- PUBLIC API (Called by ReelManager) ---
 
         public void StartSpinning() {
-            _currentState = ReelState.Spinning;
+            currentState = ReelState.Spinning;
             stoppingSequence.Clear();
             targetSymbolInstance = null;
         }
 
-        /// <summary>
-        /// Tells the reel to stop on a specific target symbol.
-        /// </summary>
         public void StopOnSymbol(SymbolType targetType, Action onStoppedCallback) {
             onReelStopped = onStoppedCallback;
 
-            // Build the sequence of symbols that will roll in.
-            // We want the target to be in the center, so we queue:
-            // 1. A random symbol (this will land at the BOTTOM)
-            // 2. The TARGET symbol (this will land in the CENTER)
-            // 3. A random symbol (this will land at the TOP)
+            // Queue: Bottom (Random), Center (Target), Top (Random)
+            stoppingSequence.Enqueue(GetRandomSymbolType()); 
+            stoppingSequence.Enqueue(targetType); 
+            stoppingSequence.Enqueue(GetRandomSymbolType()); 
 
-            stoppingSequence.Enqueue(GetRandomSymbolType()); // Bottom
-            stoppingSequence.Enqueue(targetType); // Center Target
-            stoppingSequence.Enqueue(GetRandomSymbolType()); // Top
-
-            _currentState = ReelState.Stopping;
+            currentState = ReelState.Stopping;
         }
 
         // --- INTERNAL LOGIC ---
 
-        private void MoveSymbolsDown() {
-            foreach (var symbol in symbolPool) {
-                symbol.transform.localPosition += Vector3.down * (spinSpeed * Time.deltaTime);
+        private void MoveContainerDown() {
+            // 1. Move the entire container downwards in UI space
+            symbolContainer.anchoredPosition += Vector2.down * (spinSpeed * Time.deltaTime);
+            
+            // 2. While loop prevents separation glitches if spin speed is very high
+            while (symbolContainer.anchoredPosition.y <= -symbolSpacing) {
+                WrapBottomSymbolToTop();
+            }
+
+            // 3. Stop logic checking physical UI coordinates
+            if (currentState == ReelState.Stopping && targetSymbolInstance != null) {
+                RectTransform targetRect = (RectTransform)targetSymbolInstance.transform;
                 
-                if (symbol.transform.localPosition.y <= bottomThreshold) {
-                    WrapSymbolToTop(symbol);
-                }
-                
-                if (_currentState == ReelState.Stopping && symbol == targetSymbolInstance) {
-                    if (symbol.transform.localPosition.y <= 0f) {
-                        SnapAndBounce();
-                    }
+                // Actual Y is Container offset + Symbol's local Y inside the layout group
+                float actualY = symbolContainer.anchoredPosition.y + targetRect.anchoredPosition.y;
+
+                if (actualY <= 0f) {
+                    SnapAndBounce(actualY);
                 }
             }
         }
 
-        private void WrapSymbolToTop(ReelSymbol symbol) {
-            // Because our math dynamically calculates topY based on spacing and pool size, 
-            // the offset we added in Initialize won't break the looping wrap logic!
-            float topY = symbol.transform.localPosition.y + (symbolPool.Count * symbolSpacing);
-            symbol.transform.localPosition = new Vector3(0, topY, 0);
+        private void WrapBottomSymbolToTop() {
+            ReelSymbol bottomSymbol = symbolPool[symbolPool.Count - 1];
+
+            // Move the bottom symbol to the top of the Layout Group hierarchy
+            bottomSymbol.transform.SetAsFirstSibling();
             
-            if (_currentState == ReelState.Stopping && stoppingSequence.Count > 0) {
+            symbolPool.RemoveAt(symbolPool.Count - 1);
+            symbolPool.Insert(0, bottomSymbol);
+
+            // Shift container position back up to counter the layout change seamlessly
+            symbolContainer.anchoredPosition += new Vector2(0, symbolSpacing);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(symbolContainer);
+            
+            // Inject next sequence symbol
+            if (currentState == ReelState.Stopping && stoppingSequence.Count > 0) {
                 SymbolType nextTypeInSequence = stoppingSequence.Dequeue();
-                symbol.SetSymbol(_database.GetSymbolData(nextTypeInSequence));
+                bottomSymbol.SetSymbol(database.GetSymbolData(nextTypeInSequence));
                 
                 if (stoppingSequence.Count == 1) {
-                    targetSymbolInstance = symbol;
+                    targetSymbolInstance = bottomSymbol;
                 }
             }
             else {
-                AssignRandomSymbolOffScreen(symbol);
+                AssignRandomSymbolOffScreen(bottomSymbol);
             }
         }
 
         private void AssignRandomSymbolOffScreen(ReelSymbol symbol) {
-            if (_database == null) return;
+            if (database == null) return;
             SymbolType randomType = GetRandomSymbolType();
-            symbol.SetSymbol(_database.GetSymbolData(randomType));
+            symbol.SetSymbol(database.GetSymbolData(randomType));
         }
 
         private SymbolType GetRandomSymbolType() {
-            var allSymbols = _database.GetAllSymbols();
+            var allSymbols = database.GetAllSymbols();
             int randomIndex = Random.Range(0, allSymbols.Count);
             return allSymbols[randomIndex].symbolType;
         }
 
-        // --- GAME FEEL (ANIMATION) ---
+        private void SnapAndBounce(float actualY) {
+            currentState = ReelState.Idle; 
 
-        private void SnapAndBounce() {
-            _currentState = ReelState.Idle; // Stop Update() loop
-
-            float overshoot = targetSymbolInstance.transform.localPosition.y;
-
-            foreach (var symbol in symbolPool) {
-                symbol.transform.localPosition -= new Vector3(0, overshoot, 0);
-            }
+            // Snap the container perfectly to grid center to fix the overshoot
+            symbolContainer.anchoredPosition -= new Vector2(0, actualY);
 
             if (reelAnimation != null) {
-                reelAnimation.PlaySnapAndBounce(transform.localPosition, () => {
+                reelAnimation.PlaySnapAndBounce(symbolContainer.anchoredPosition, () => {
                     onReelStopped?.Invoke();
                 });
-            }
-            else {
+            } else {
                 onReelStopped?.Invoke();
             }
         }
